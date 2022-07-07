@@ -1,4 +1,8 @@
-# typescript-udemy
+> typescript-udemy
+
+---
+
+# Types
 
 ## Core Types
 
@@ -121,6 +125,41 @@ function output(value: any): void {
 output(1);
 output("hello world");
 output({ a: 10, b: 20 });
+```
+
+### unknown
+
+If you assign variable declared with `any` to variable declared with type say `string`, then typescript wouldnt through an error.
+
+```ts
+let a: any;
+
+let b: string = "hello world";
+
+b = a;
+```
+
+But if you dont want such assignments to be made, you should declare variables with `unknown` instead of `any` as follows:
+
+```ts
+let a: unknown;
+
+let b: string = "hello world";
+
+// error TS2322: Type 'unknown' is not assignable to type 'string'
+b = a;
+```
+
+To allow the assignment of `unknown` type variable, you need to add a type check as follows:
+
+```ts
+let a: unknown;
+
+let b: string = "hello world";
+
+if (typeof a === "string") {
+  b = a;
+}
 ```
 
 ## Other Types
@@ -248,6 +287,16 @@ function output(): undefined {
 }
 ```
 
+### never
+
+In cases when your function is supposed to never return any value ever, you can declare the return type as `never`. Take for example the following function which will disrupt the script and the function would not be returning any value:
+
+````ts
+function generateError(message: string, code: number): never {
+  throw { message, code }
+}
+```
+
 ## Function type
 
 In Javascript, its possible to assign reference of the function to a variable. To prevent unintentional assignment to such variable, we can define `Function` type to the variable:
@@ -265,7 +314,7 @@ setTimeout(fn, 100);
 // error TS2322: Type 'string' is not assignable to type 'Function'
 fn = "oops !!!";
 setTimeout(fn, 100);
-```
+````
 
 The `Function` type will prevent assignment of any other type, but thats not enough when you need to use only particular functions. To address this, we can define function signatures as well such that only functions matching the signature defined can be assigned.
 
@@ -324,4 +373,254 @@ setTimeout(fn, 100);
 
 fn = compare;
 setTimeout(fn, 100);
+```
+
+# Classes
+
+Class based creation of object is an alternative to object literals.
+
+## Class field (aka property)
+
+You can add a class property as follows:
+
+```ts
+class Person {
+  name: string;
+}
+```
+
+## Constructor function
+
+You can create a constructor function which takes the params required to initialize class properties.
+
+```ts
+class Person {
+  name: string;
+
+  constructor(n: string) {
+    this.name = n;
+  }
+}
+```
+
+To create the object, we use the `new` operator as follows:
+
+```ts
+const james = new Person("James Smith");
+```
+
+### ES6 equivalent
+
+The above class declaration when transpiled into ES6 would result in:
+
+```js
+class Person {
+  constructor(n: string) {
+    this.name = n;
+  }
+}
+```
+
+This is because the ES6 syntax doesnt allow class level property declarations.
+
+### ES5 equivalent
+
+The ES5 equivalent would look like this:
+
+```js
+var Person = (function () {
+  function Person(n) {
+    this.name = n;
+  }
+  return Person;
+})();
+```
+
+which is same as:
+
+```js
+function Person(n) {
+  this.name = n;
+}
+```
+
+These declarations had an issue. If you invoked them with `new` as follows, they would work as expected:
+
+```js
+var person = new Person("James Smith");
+```
+
+But if you missed using `new` while calling the constructor function, `this.name` would create a property on global object which is `window` in browser.
+
+```js
+var person = Person("James Smith");
+
+console.log(person); // undefined
+console.log(window.name); // James Smith
+```
+
+NOTE: With class if you try creating an instance without `new` you will get an error:
+
+> VM1285:1 Uncaught TypeError: Class constructor Person1 cannot be invoked without 'new'
+
+## Class method
+
+We can add function as property of the class as follows:
+
+```ts
+class Person {
+  name: string;
+
+  constructor(n: string) {
+    this.name = n;
+  }
+
+  describe() {
+    console.log("Person name", this.name);
+  }
+}
+```
+
+### Class method assignment
+
+Note that even though a function is assigned on the `class`, it can be assigned outside.
+
+```ts
+const james = new Person("James Smith");
+
+const human = {
+  name: 'human being'
+  info: james.describe,
+};
+```
+
+In this case you could still call `describe` as:
+
+```ts
+human.describe(); // human being
+```
+
+But here since describe is being called with `human` object instance.
+
+### Restricting method this reference
+
+To restrict method invocation with only limited object types, we can declare the type for `this` within a function:
+
+```ts
+class Person {
+  name: string;
+
+  constructor(n: string) {
+    this.name = n;
+  }
+
+  describe(this: Person) {
+    console.log("Person name", this.name);
+  }
+}
+```
+
+## private and public properties
+
+To prevent access to a class property, Typescript unlike older Javascript versions provides declaring `private` properties. Though properties are public by default, you can still use `public` keyword to specify property type.
+
+```ts
+const james = new Person();
+// modification allowed as name is a public property
+james.name = "Mohan Das";
+```
+
+But you can prevent the above as follows:
+
+```ts
+class Person {
+  private name: string;
+
+  constructor(n: string) {
+    this.name = n;
+  }
+
+  setName(name) {
+    // add validation here
+    this.name = name;
+  }
+
+  describe(this: Person) {
+    console.log("Person name", this.name);
+  }
+}
+```
+
+Now you can allow modification only though an interface and prevent direct access.
+
+## constructor shorthand initialization
+
+If you use `public` or `private` keywords while declaring the constuctor function params, you can skip declaring the class property and manual assignment of constructor parameters to class properties.
+
+For example, the following class:
+
+```
+class Person {
+  name: string;
+  age: number;
+
+  constructor(n: string, a: number) {
+    this.name = n;
+    this.age = a;
+  }
+
+  describe(this: Person) {
+    console.log("Person name", this.name);
+  }
+}
+```
+
+can be declared as follows:
+
+```ts
+class Person {
+  constructor(public name: string, public age: number) {}
+
+  describe(this: Person) {
+    console.log("Person name", this.name);
+    console.log("Person age", this.age);
+  }
+}
+```
+
+NOTE: constructor shorthand requires the use of `public` or `private` keywords for the params. Or else, those properties will not be generated.
+
+```ts
+class Person {
+  constructor(public name: string, age: number) {}
+
+  describe(this: Person) {
+    console.log("Person name", this.name);
+
+    // error TS2339: Property 'age' does not exist on type 'Person'.
+    console.log("Person age", this.age);
+  }
+}
+```
+
+## readonly properties
+
+To explicitly declare a property as constant i.e. a property which wont change after its initialized once, we can use `readonly` modifier on such properties.
+
+```ts
+class Price {
+  readonly value: number;
+  offerprice: number;
+
+  constructor(total) {
+    this.value = total;
+  }
+
+  setValue(discount) {
+    this.offerprice = this.value * discount;
+
+    // error TS2540: Cannot assign to 'value' because it is a read-only property
+    this.value = discount;
+  }
+}
 ```
