@@ -624,3 +624,139 @@ class Price {
   }
 }
 ```
+
+TODO - add remaining info
+
+# Advanced Types
+
+## Intersection
+
+If you had two types as follows:
+
+```ts
+type SuccessResponse = {
+  data: object;
+  err: boolean;
+};
+
+type ErrorResponse = {
+  err: boolean;
+  msg: string;
+};
+```
+
+You could create a type which is a combination of these two as follows:
+
+```ts
+type ApiResponse = SuccessResponse & ErrorResponse;
+```
+
+which is equivalnt to defining:
+
+```ts
+type ApiResponse = {
+  data: object;
+  err: boolean;
+  msg: string;
+};
+```
+
+## Type Guard
+
+### primitives
+
+While using Union types, we need to know which type we are getting eventually. Consider following for example:
+
+```ts
+type Combinable = string | number;
+
+function add(x: Combinable, y: Combinable) {
+  // following is a type guard
+  if (x === "string" || y === "string") {
+    return x.toString() + y.toString();
+  }
+  return x + y;
+}
+```
+
+The if statement here is acting as a `type guard` and validating the type at runtime.
+
+### object
+
+But in case the union types are not primitive types but object types instead, we need to add type guard as a bit differently. Consider the following union type:
+
+```ts
+type SuccessResponse = {
+  data: object;
+  err: boolean;
+};
+
+type ErrorResponse = {
+  err: boolean;
+  msg: string;
+};
+
+type ApiResponse = SuccessResponse | ErrorResponse;
+```
+
+NOTE: Typescript doesnt allow adding type check as follows:
+
+```ts
+function printResponse(response: ApiResponse) {
+  // error TS2339: Property 'data' does not exist on type 'ApiResponse'.
+  if (response.data) {
+    console.dir(response.data);
+  }
+  // error TS2339: Property 'msg' does not exist on type 'ApiResponse'.
+  if (response.mgs) {
+    console.log(response.msg);
+  }
+}
+```
+
+While using `ApiReponse` objects we need to add type guard using `in` operator as follows:
+
+```ts
+function printResponse(response: ApiReponse) {
+  if ("data" in response) {
+    console.dir(response.data);
+  }
+  if ("msg" in response) {
+    console.log(response.msg);
+  }
+}
+```
+
+### class
+
+While using class based objects, we need not use the `in` operator from javascript.
+
+```ts
+class Car {
+  drive() {
+    console.log("Driving");
+  }
+}
+
+class Truck {
+  drive() {
+    console.log("Driving a truck");
+  }
+  loadCargo() {
+    console.log("Load cargo");
+  }
+}
+
+type Vehicle = Car | Truck;
+```
+
+Instead we can use the `instanceof` instead while dealing with object instances based on classes.
+
+```ts
+function useVehicle(vehicle: Vehicle) {
+  vehicle.drive();
+  if (vehicle instanceof Truck) {
+    vehicle.loadCargo();
+  }
+}
+```
