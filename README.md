@@ -1253,3 +1253,164 @@ class Panel {
   }
 }
 ```
+
+## Multiple Class Decorators - Order of Execution
+
+Consider the following:
+
+```ts
+function WithTemplate(template: string, id: string) {
+  console.log("WithTemplate factory");
+  return function (constructor: Function) {
+    console.log("WithTemplate decorator");
+  };
+}
+
+function Logger(logText: string) {
+  console.log("Logger factory");
+  return function (constructor: Function) {
+    console.log("Logger decorator");
+  };
+}
+
+@Logger("text input for logger")
+@WithTemplate("<p>custom template here</p>", "root-node")
+class Panel {
+  constructor() {
+    console.log("Panel constructor called");
+  }
+}
+```
+
+NOTE: The factory function execute first in the order or declaration (top-down) over the class. This is because regular javascript execution rules apply as decorators are being invoked as function over the class declaration. And the decorators run (bottom-up).
+
+So the output of the above declarations would be:
+
+```
+Logger factory
+WithTemplate factory
+WithTemplate decorator
+Logger decorator
+```
+
+## Property Decorator
+
+A decorator can also be used on a property. It gets two parameters `target` and `propertyName`. `target` points to the prototype if its a instance property but can point to the constructor for static properties.
+
+```ts
+function Log(target: any, propertyName: string | Symbol) {
+  console.log("Property decorator");
+  console.log(target);
+  console.log(propertyName);
+}
+
+class Person {
+  @Log
+  name: string;
+
+  constructor(n: string) {
+    this.name = n;
+  }
+}
+```
+
+## Accessor Decorator
+
+Like a property decorator we can have decorators on the accessor function. It gets an additional parameter `descriptor` of type `PropertyDescriptor`. Consider the following:
+
+```ts
+function Loggable(
+  target: any,
+  propertyName: string | Symbol,
+  descriptor: PropertyDescriptor
+) {
+  console.log("Accessor decorator");
+  console.log(target);
+  console.log(propertyName);
+  console.log(descriptor);
+}
+
+class Price {
+  private _price: number;
+
+  @Loggable
+  set price(val: number) {
+    if (val > 0) {
+      _price = val;
+    } else {
+      throw Error("Price should not be negative");
+    }
+  }
+
+  constructor(p: number) {
+    this._price = p;
+  }
+}
+```
+
+## Method Decorator
+
+A method decorator is very similar to accessor decorator and gets the same set of parameters. It only differs in terms of value returned in the `descriptor`. Its because javascript has different descriptor for a accessor and function.
+
+```ts
+function Loggable(
+  target: any,
+  propertyName: string | Symbol,
+  descriptor: PropertyDescriptor
+) {
+  console.log("Method decorator");
+  console.log(target);
+  console.log(propertyName);
+  console.log(descriptor);
+}
+
+class Price {
+  private _price: number;
+
+  @Loggable
+  getPriceWithTax() {
+    return _price * 1.3;
+  }
+
+  constructor(p: number) {
+    this._price = p;
+  }
+}
+```
+
+## Parameter Decorator
+
+Parameter decorator three parameters. First parameter is the `target` (it points to the prototype). Second parameter is the `propertyName` which points to the function name. Third parameter is not a descriptor but instead the position count.
+
+```ts
+function Loggable(
+  target: any,
+  propertyName: string | Symbol,
+  position: number
+) {
+  console.log("Method decorator");
+  console.log(target);
+  console.log(propertyName);
+  console.log(position);
+}
+
+class Price {
+  private _price: number;
+
+  getPriceAfterDiscount(@Loggable discount: number) {
+    return _price * discount;
+  }
+
+  constructor(p: number) {
+    this._price = p;
+  }
+}
+```
+
+## Multiple Decorators - Order of Execution
+
+These are executed when the class is declared not when the code is intiantiated.
+
+## Returning and changing a class in class decorator
+
+Need to revisit
