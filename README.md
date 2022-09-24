@@ -1048,6 +1048,88 @@ function merge<T extends object, V extends object>(x: T, y: V) {
   return Object.assign(x, y);
 }
 
-// Argument of type 'number' is not assignable to parameter of type 'object'.ts(2345)
+// Argument of type 'number' is not assignable to parameter of type 'object'. ts(2345)
 const result = merge({ name: "john" }, 10);
+```
+
+### Another generic function
+
+```ts
+interface Lengthy {
+  length: number;
+}
+
+function count<T extends Lengthy>(element: T): number {
+  return element.length;
+}
+
+count([]); // 0
+count(["one"]); // 1
+count(["one", "two"]); // 2
+count("hello world"); // 11
+// Argument of type 'number' is not assignable to parameter of type 'Lengthy'. ts(2345)
+count(10);
+```
+
+## keyof Contraint
+
+Consider the following example:
+
+```ts
+function getAttributeValue<T, U>(obj: T, key: U) {
+  // Type 'U' cannot be used to index type 'T'. ts(2536)
+  return obj[key];
+}
+```
+
+Here the key that we are passing might or might not exist in the object. With typescript we can ensure that the value we are passing as key is the key in the object being passed as first parameter.
+
+```ts
+function getAttributeValue<T extends object, U extends keyof T>(
+  obj: T,
+  key: U
+) {
+  return obj[key];
+}
+```
+
+With the above function declaration:
+
+```ts
+getAttributeValue({ name: "john" }, "name"); // works
+// Argument of type '"age"' is not assignable to parameter of type '"name"'. ts(2345)
+getAttributeValue({ name: "john" }, "age");
+```
+
+## Generic Utility Types
+
+If you were to define a object based on a type as follows:
+
+```ts
+type Person = {
+  name: string;
+  age: number;
+  city: string;
+};
+
+function constructObject(): Person {
+  // Type '{}' is missing the following properties from type 'Person': name, age, city ts(2739)
+  const person: Person = {};
+  person.name = "John";
+  person.age = 21;
+  person.city = "Bangalore";
+  return person;
+}
+```
+
+Typescript doesnt like this as the initial declartion `const person: Person = {}` does not define all the properties. If you would like to add properties one by one, you can use the `Partial` type as follows:
+
+```ts
+function constructObject(): Person {
+  const person: Partial<Person> = {};
+  person.name = "John";
+  person.age = 21;
+  person.city = "Bangalore";
+  return person as Person;
+}
 ```
