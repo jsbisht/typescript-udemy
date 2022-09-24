@@ -760,3 +760,198 @@ function useVehicle(vehicle: Vehicle) {
   }
 }
 ```
+
+## Discriminated Union
+
+Consider the following example:
+
+```ts
+interface Bird {
+  flyingSpeed: number;
+}
+
+interface Cat {
+  movingSpeed: number;
+}
+
+type Animal = Bird | Cat;
+```
+
+Now to access the speed of a given animal instance, you could either do it as follows:
+
+```ts
+function printSpeed(animal: Animal) {
+  let speed;
+  if ("flyingSpeed" in animal) {
+    speed = animal.flyingSpeed;
+  }
+  if ("movingSpeed" in animal) {
+    speed = animal.movingSpeed;
+  }
+  console.log("Speed:", speed);
+}
+```
+
+An alternative way to do the same is using type literal in the interace as follows:
+
+```ts
+interface Bird {
+  type: "bird";
+  flyingSpeed: number;
+}
+
+interface Cat {
+  type: "cat";
+  movingSpeed: number;
+}
+
+type Animal = Bird | Cat;
+
+function printSpeed(animal: Animal) {
+  let speed;
+  switch (animal.type) {
+    case "bird":
+      speed = animal.flyingSpeed;
+    case "cat":
+      speed = aniaml.movingSpeed;
+  }
+  console.log("Speed:", speed);
+}
+```
+
+## Type Casting
+
+Consider the following element on the dom:
+
+```html
+<body>
+  <input type="text" id="user-input" />
+</body>
+```
+
+When we access this element from javascript, we will get an error:
+
+```ts
+const element = document.querySelector("#user-input");
+// error TS2339: Property 'value' does not exist on type 'Element'.
+console.log(element.value);
+```
+
+If we know for sure the type of an object, we can typecast it as follows:
+
+```ts
+const element = <HTMLInputElement>document.querySelector("#user-input");
+```
+
+or
+
+```ts
+const element = document.querySelector("#user-input") as HTMLInputElement;
+```
+
+### Never Null
+
+The exclamation mark `!` is known as the non-null assertion operator in TypeScript.
+
+Its possible to declare that a certain object will never yeild a null value. And to do so, typescript provides us with `!`.
+
+```ts
+const element = document.querySelector("#user-input")!;
+element.addEventListener("click", () => alert("element clicked"));
+```
+
+By typecasting `document.querySelector("#user-input") as HTMLInputElement` we are implicitly saying that the element will never be null. In case the element might or might not exist, its better to add explicit checks as follows:
+
+```ts
+const element = document.querySelector("#user-input");
+if (element) {
+  element.addEventListener("click", () => alert("element clicked"));
+}
+```
+
+Note that the element will have to typecasted later instead as follows:
+
+```ts
+const element = document.querySelector("#user-input");
+if (element) {
+  const value = (element as HTMLInputElement).value;
+  console.log(value);
+}
+```
+
+## Index Properties
+
+If you have to define an object that might or might not have some properties say as follows:
+
+```ts
+interface ErrorContainer {
+  email?: string;
+  username?: string;
+}
+```
+
+If you do not want null for missing properties, you can use index properties as follows:
+
+```ts
+interface ErrorContainer {
+  [prop: string]: string;
+}
+```
+
+Then you could define your object as follows:
+
+```ts
+const errorDetails: ErrorContainer = {
+  email: "enter a valid email id",
+};
+```
+
+## Function Overloads
+
+```ts
+type Combinable = string | number;
+
+function add(x: number, y: number): number;
+function add(x: string, y: string): string;
+function add(x: string, y: number): string;
+function add(x: number, y: string): string;
+function add(x: Combinable, y: Combinable) {
+  // following is a type guard
+  if (x === "string" || y === "string") {
+    return x.toString() + y.toString();
+  }
+  return x + y;
+}
+```
+
+Without overloads the `function add(x: Combinable, y: Combinable)` might return a string or number. Having function overloads can help typescript let us know what is the correct return type based on the input.
+
+```ts
+let value;
+value = add("one", "two");
+// This would result into error without proper overloads
+value.split("");
+```
+
+## Optional Chaining
+
+## Nullish Coalesing
+
+Useful when you are dealing with `null` or `undefined` values.
+
+If you use OR operator, it considers `''` and `0` as falsy values. But in case you need to consider them as valid value and consider only `null` and `undefined` differently, you have to use nullish coalesing.
+
+```ts
+let value;
+value = "" || "test";
+console.log(value); // test
+
+value = "" ?? "test";
+console.log(value); // ''
+
+value = 0 || "test";
+console.log(value); // test
+
+value = 0 ?? "test";
+console.log(value); // 0
+```
