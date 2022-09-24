@@ -1191,3 +1191,65 @@ largeList.add(true);
 We could add constraints on types that we want to work with `class LargeList<T extends string | number | boolean> {`
 
 # Decorators (Meta Programming)
+
+Decorators run when your class is defined not when its instanciated. Consider the following class with `Logger` decorator.
+
+```ts
+function Logger(constructor: Function) {
+  console.log("Logger started");
+  console.log(constructor);
+}
+
+@Logger
+class Person {
+  constructor() {
+    console.log("Person constructor called");
+  }
+}
+```
+
+The above declaration will always print `Logger started` and `constructor` value whether `Person` class instance is created or not.
+
+NOTE: This required `"experimentalDecorators": true` to be added to `tsconfig.json` file.
+
+## Decorator Factories
+
+Instead of defining the decorator function, we can use factory function which can take argument when decorator is used with a class.
+
+```ts
+function Logger(logText: string) {
+  return function (constructor: Function) {
+    console.log(logText);
+    console.log(constructor);
+  };
+}
+
+@Logger("text input for logger")
+class Person {
+  constructor() {
+    console.log("Person constructor called");
+  }
+}
+```
+
+## Another Decorator
+
+We could use more useful decorator. Similar to angular we could have a decorator which manipulates the DOM template.
+
+```ts
+function WithTemplate(template: string, id: string) {
+  return function (constructor: Function) {
+    const element = document.getElementById(id);
+    if (element) {
+      element.innerHTML = template;
+    }
+  };
+}
+
+@WithTemplate("<p>custom template here</p>", "root-node")
+class Panel {
+  constructor() {
+    console.log("Panel constructor called");
+  }
+}
+```
