@@ -1103,6 +1103,8 @@ getAttributeValue({ name: "john" }, "age");
 
 ## Generic Utility Types
 
+### Partial
+
 If you were to define a object based on a type as follows:
 
 ```ts
@@ -1133,3 +1135,59 @@ function constructObject(): Person {
   return person as Person;
 }
 ```
+
+### Readonly
+
+If you were to define a object that you dont want to change later, you could use the `Readonly` type as follows:
+
+```ts
+const list: Readonly<string[]> = ["one", "two"];
+// error TS2339: Property 'push' does not exist on type 'readonly string[]'
+list.push("try");
+// error TS2339: Property 'pop' does not exist on type 'readonly string[]'.
+list.pop();
+```
+
+## Generic Types vs Union Types
+
+Consider the following example that uses Union Types:
+
+```ts
+class LargeList {
+  private list: (string | boolean | number)[] = [];
+
+  add(item: string | boolean | number) {
+    this.list.push(item);
+  }
+}
+
+const largeList = new LargeList();
+largeList.add("one");
+largeList.add(2);
+largeList.add(true);
+```
+
+The above declaration makes the class work with mixed data types. It like declaring that we can have any of the type as declared in the tuple `string | boolean | number` while declaring the `list` attribute.
+
+To declare that the given class should work with a given type, we can use generics instead of Union types.
+
+```ts
+class LargeList<T> {
+  private list: T[] = [];
+
+  add(item: T) {
+    this.list.push(item);
+  }
+}
+
+const largeList = new LargeList<string>();
+largeList.add("one");
+// error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+largeList.add(2);
+// error TS2345: Argument of type 'boolean' is not assignable to parameter of type 'string'.
+largeList.add(true);
+```
+
+We could add constraints on types that we want to work with `class LargeList<T extends string | number | boolean> {`
+
+# Decorators (Meta Programming)
