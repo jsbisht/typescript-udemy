@@ -1414,3 +1414,130 @@ These are executed when the class is declared not when the code is intiantiated.
 ## Returning and changing a class in class decorator
 
 Need to revisit
+
+## Return Types
+
+Accessor and Method decorator can return values and that can be used by Typescript. Other decorator return values are ignored.
+
+## Autobind decorator - Using Method decorator
+
+Consider the following example:
+
+```ts
+class Panel {
+  name: "I am a panel";
+
+  printName() {
+    console.log(this.name);
+  }
+}
+
+const panel = new Panel();
+const element = document.querySelector(".panel")!;
+element.addEventListener("click", panel.printName);
+```
+
+When the event listener in the above example is triggered, `printName` function would print undefined as `this` doesnt point to the panel object anymore. To fix this issue we can bind it as follows:
+
+```ts
+element.addEventListener("click", panel.printName.bind(panel));
+```
+
+Or we could use the following `Autobind` decorator to take care of binding the function with the panel class instance.
+
+```ts
+function Autobind(_: any, _2: string, descriptor: PropertyDescriptor) {
+  const originalMethod = descriptor.value;
+  const newDescriptor: PropertyDescriptor = {
+    configurable: true,
+    enumerable: false,
+    get() {
+      return originalMethod.bind(this);
+    },
+  };
+  return newDescriptor;
+}
+
+class Panel {
+  name: "I am a panel";
+
+  @Autobind
+  printName() {
+    console.log(this.name);
+  }
+}
+
+const panel = new Panel();
+const element = document.querySelector(".panel")!;
+element.addEventListener("click", panel.printName);
+```
+
+## Validation with decorators
+
+Consider the following:
+
+```ts
+class FormPanel {
+  @Required
+  title: string;
+
+  @PositiveNumber
+  age: number;
+
+  constructor(t: string, a: number) {
+    this.title = t;
+    this.age = a;
+  }
+}
+```
+
+```ts
+const registeredValidators: ValidatorConfig = {
+  [property: string]: {
+    [validatableProp: string]: string[] // ['required', 'positive']
+  }
+};
+
+function Required(target: any, propName: string) {
+  registeredValidators[target.constructor.name] = {
+    ...registeredValidators[target.constructor.name],
+    [propName]: [
+      ...(registeredValidators[target.constructor.name]?.[propName] ?? []),
+      "required",
+    ],
+  };
+}
+
+function PositiveNumber(target: any, propName: string) {
+  registeredValidators[target.constructor.name] = {
+    ...registeredValidators[target.constructor.name],
+    [propName]: [
+      ...(registeredValidators[target.constructor.name]?.[propName] ?? []),
+      "positive",
+    ],
+  };
+}
+```
+
+Now we could have a validate function to validate if the form is honoring the decorators validations. This will be added as part of the `onSubmit` or some event for the form.
+
+```ts
+function validate(obj: object) {
+  const objectValidatorConfig = registeredValidators[obj.constructor.name];
+  if (!objectValidatorConfig) {
+    return true;
+  }
+  const isValid = true;
+  for (const prop in objectValidatorConfig) {
+    for (const validator of objectValidatorConfig[prop]) {
+      switch (validator) {
+        case "required":
+          isValid = isValid && !!obj[prop];
+          break;
+        case "postive":
+          isValid = isValid && +obj[prop] > 0;
+      }
+    }
+  }
+}
+```
