@@ -955,3 +955,99 @@ console.log(value); // test
 value = 0 ?? "test";
 console.log(value); // 0
 ```
+
+# Generics
+
+## Array Types
+
+Consider the following array:
+
+```ts
+const list = ["hello", "world"];
+```
+
+Typescript can deduce the type of the array implicitly as `string[]` based on the values of the array.
+
+To declare the type of the array you can either declare it as:
+
+```ts
+const list: string[] = [];
+```
+
+or you could declare it as follows:
+
+```ts
+const list: Array<string> = [];
+```
+
+If the array allows multiple types you could declare it as:
+
+```ts
+const list: (string | number)[] = [];
+```
+
+or
+
+```ts
+const list: Array<string | number> = [];
+```
+
+## Promises
+
+Every promise resolve to a value of certain type. By default a Promise is of type `Promise<unknown>`. But to get the type based benefits like autocomplete or type checks, you can define the type as follows:
+
+```ts
+const promise: Promise<string> = new Promise((resolve, reject) => {
+  setTimeout(() => {
+    resolve("resulting value");
+  });
+});
+
+promise.then((data) => {
+  data.split(" "); // will work as the promise return a string.
+});
+```
+
+## Function Input Type
+
+Consider the following. Even though the resulting type after assigning is a combined object, typescript would stil consider it as an any object type. So its equivalent to `function merge(x: any, y: any): any`:
+
+```ts
+function merge(x, y) {
+  return Object.assign(x, y);
+}
+const result = merge({ name: "john" }, { age: 10 });
+result.fullname; // will not result in error at compile time
+```
+
+With the types, typescript can infer that resulting object will be an intersection of passed in objects.
+
+```ts
+function merge<T, V>(x: T, y: V) {
+  return Object.assign(x, y);
+}
+
+const result = merge({ name: "john" }, { age: 10 });
+result.fullname; // Property 'fullname' does not exist
+```
+
+### Constraints
+
+But when you invoke the `merge` function it can take any type as input. Consider the following example where the second argument is a `number` instead of an `object`.
+
+```ts
+const result = merge({ name: "john" }, 10);
+```
+
+In this case, neither typescript nor javascript throws an error and javascript would silently ignore the second argument during `assign` function invocation. This is because we are using generic type to tell javascript that any type input is considered valid.
+
+In our case, we need to pass only `object` type as input to merge function. So, we should declare the generic types with constraints as follows:
+
+```ts
+function merge<T extends object, V extends object>(x: T, y: V) {
+  return Object.assign(x, y);
+}
+
+// Argument of type 'number' is not assignable to parameter of type 'object'.ts(2345)
+const result = merge({ name: "john" }, 10);
+```
