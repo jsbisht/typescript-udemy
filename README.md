@@ -389,6 +389,33 @@ class Person {
 }
 ```
 
+## Getter
+
+You can use a getter as follows:
+
+```ts
+class Persons {
+  _count: number;
+  constructor(count: number) {
+    this._count = count;
+  }
+
+  get count() {
+    if (this._count === 1) {
+      return "single person";
+    } else {
+      return "multiple persons";
+    }
+  }
+  print() {
+    console.log(this.count);
+  }
+}
+
+const person = new Persons(1);
+person.print();
+```
+
 ## Constructor function
 
 You can create a constructor function which takes the params required to initialize class properties.
@@ -1541,3 +1568,39 @@ function validate(obj: object) {
   }
 }
 ```
+
+# Namespace
+
+https://www.typescriptlang.org/docs/handbook/namespaces.html#multi-file-namespaces
+
+# Webpack with Typescript
+
+# Misc
+
+## Third Party Library Types
+
+You can find the types for most of the third party libraries here:
+
+https://github.com/DefinitelyTyped/DefinitelyTyped
+
+Say you want to use `lodash`, you could install its types as follows:
+
+```sh
+npm install --save @types/lodash
+```
+
+## Using `declare`
+
+If you want to use a global variable, you can use it by declaring it first:
+
+```ts
+declare var GLOBAL: string;
+```
+
+## Using `class-transformer` package
+
+https://www.npmjs.com/package/class-transformer
+
+## Using `class-validator` package
+
+https://www.npmjs.com/package/class-validator
